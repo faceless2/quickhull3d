@@ -10,3 +10,9 @@ There are some other 3D convex hull implementations available in netland, but I 
 Mark Newbold has used this package to create a very picturesque applet that creates and displays Waterman polyhedra 
 
 See the maven project site here: [quickhull3d](http://quickhull3d.github.io/quickhull3d/)
+
+## Convex modification
+This fork adds a methods "convex" on the QuickHull3D class, which can be applied to a triangulated convex
+hull to include some of the points on the inside of the hull. It's based on the 
+"A New Concave Hull Algorithm and Concaveness Measure for n-dimensional Datasets" 2010 paper by Jin-Seo Park and Se-John Oh,
+but modified to take a deflection angle rather than an abstract threshold value
