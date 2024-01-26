@@ -40,7 +40,7 @@ class Vertex {
     /**
      * Spatial point associated with this vertex.
      */
-    Point3d pnt;
+    final Point3d pnt;
 
     /**
      * Back index into an array.
@@ -67,6 +67,10 @@ class Vertex {
      */
     public Vertex() {
         pnt = new Point3d();
+    }
+
+    public Vertex(Point3d pnt) {
+        this.pnt = pnt;
     }
 
     /**

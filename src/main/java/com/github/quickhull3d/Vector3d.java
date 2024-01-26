@@ -381,6 +381,15 @@ public class Vector3d {
      * @return string representation
      */
     public String toString() {
-        return x + " " + y + " " + z;
+        return "[" + x + " " + y + " " + z + "]";
+    }
+
+    public boolean equals(Object o) {
+        return o instanceof Vector3d && ((Vector3d)o).x == x && ((Vector3d)o).y == y && ((Vector3d)o).z == z;
+    }
+
+    public int hashCode() {
+        long l = Double.doubleToLongBits(x) ^ Double.doubleToLongBits(y) ^ Double.doubleToLongBits(z);
+        return (int)((l>>32)|l);
     }
 }

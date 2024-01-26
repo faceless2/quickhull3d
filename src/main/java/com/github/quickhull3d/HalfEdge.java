@@ -40,7 +40,7 @@ class HalfEdge {
     /**
      * The vertex associated with the head of this half-edge.
      */
-    protected Vertex vertex;
+    final Vertex vertex;
 
     /**
      * Triangular face associated with this half-edge.
@@ -74,9 +74,6 @@ class HalfEdge {
     public HalfEdge(Vertex v, Face f) {
         vertex = v;
         face = f;
-    }
-
-    public HalfEdge() {
     }
 
     /**
