@@ -37,7 +37,7 @@ package com.github.quickhull3d;
  * 
  * @author John E. Lloyd, Fall 2004
  */
-public class Vector3d {
+class Vector3d {
 
     /**
      * Precision of a double.
@@ -95,8 +95,9 @@ public class Vector3d {
      * 
      * @param i
      *            element index
-     * @return element value throws ArrayIndexOutOfBoundsException if i is not
-     *         in the range 0 to 2.
+     * @return element value
+     * @throws ArrayIndexOutOfBoundsException
+     *             if i is not in the range 0 to 2.
      */
     public double get(int i) {
         switch (i) {
@@ -119,8 +120,8 @@ public class Vector3d {
      *            element index
      * @param value
      *            element value
-     * @return element value throws ArrayIndexOutOfBoundsException if i is not
-     *         in the range 0 to 2.
+     * @throws ArrayIndexOutOfBoundsException
+     *             if i is not in the range 0 to 2.
      */
     public void set(int i, double value) {
         switch (i) {
@@ -143,6 +144,7 @@ public class Vector3d {
      * 
      * @param v1
      *            vector whose values are copied
+     * @return this
      */
     public Vector3d set(Vector3d v1) {
         x = v1.x;
@@ -156,6 +158,7 @@ public class Vector3d {
      * 
      * @param v1
      *            right-hand vector
+     * @return this
      */
     public Vector3d add(Vector3d v1) {
         x += v1.x;
@@ -169,6 +172,7 @@ public class Vector3d {
      * 
      * @param v1
      *            right-hand vector
+     * @return this
      */
     public Vector3d sub(Vector3d v1) {
         x -= v1.x;
@@ -182,6 +186,7 @@ public class Vector3d {
      * 
      * @param s
      *            scaling factor
+     * @return this
      */
     public Vector3d scale(double s) {
         x = s * x;
@@ -213,6 +218,8 @@ public class Vector3d {
     /**
      * Returns the Euclidean distance between this vector and vector v.
      * 
+     * @param v
+     *            the vector
      * @return distance between this vector and v
      */
     public double distance(Vector3d v) {
@@ -226,6 +233,8 @@ public class Vector3d {
      * Returns the squared of the Euclidean distance between this vector and
      * vector v.
      * 
+     * @param v
+     *            the vector
      * @return squared distance between this vector and v
      */
     public double distanceSquared(Vector3d v) {
@@ -249,6 +258,8 @@ public class Vector3d {
 
     /**
      * Normalizes this vector in place.
+     * 
+     * @return this
      */
     public Vector3d normalize() {
         double lenSqr = x * x + y * y + z * z;
@@ -264,6 +275,8 @@ public class Vector3d {
 
     /**
      * Sets the elements of this vector to zero.
+     * 
+     * @return this
      */
     public Vector3d setZero() {
         x = y = z = 0;
@@ -279,6 +292,7 @@ public class Vector3d {
      *            value for second element
      * @param z
      *            value for third element
+     * @return this
      */
     public Vector3d set(double x, double y, double z) {
         this.x = x;
@@ -293,6 +307,7 @@ public class Vector3d {
      * 
      * @param v2
      *            right-hand vector
+     * @return this
      */
     public Vector3d cross(Vector3d v2) {
         double tmpx = y * v2.z - z * v2.y;
@@ -325,6 +340,14 @@ public class Vector3d {
     /**
      * Return the nearest point to p on the line-segment [p0,p1], or null if the
      * perpendicular line from p to the line does not intersect the segment
+     * 
+     * @param v0
+     *            the start point
+     * @param v1
+     *            the apex point
+     * @param v2
+     *            the end point
+     * @return nearest point
      */
     static Point3d nearestPointOnSegment(final Point3d v0, final Point3d v1, final Point3d p) {
         double l = v1.distance(v0);
@@ -340,6 +363,14 @@ public class Vector3d {
 
     /**
      * Return the angle in degrees between [p0,p1] and [p1,p2]
+     * 
+     * @param v0
+     *            the start point
+     * @param v1
+     *            the apex point
+     * @param v2
+     *            the end point
+     * @return the angle in degrees between 0..180
      */
     static double angle(final Point3d p0, final Point3d p1, final Point3d p2) {
         Vector3d a = new Vector3d(p1).sub(p0).normalize();
