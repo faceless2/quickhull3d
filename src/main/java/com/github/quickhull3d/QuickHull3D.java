@@ -1317,6 +1317,141 @@ public class QuickHull3D {
         return true;
     }
 
+    /**
+     * Modify the Convex hull by selecting concave points that do not deflect a
+     * vector by more then "threshold" degrees. Requires all faces are triangles
+     * 
+     * @param threshold
+     *            the maximum value in degrees that an edge can deviate
+     */
+    public void concave(final float threshold) {
+        // Based on the idea in
+        // "A New Concave Hull Algorithm and Concaveness Measure for n-dimensional Datasets*",
+        // 2010
+        // by JIN-SEO PARK AND SE-JONG OH, except modifying the threshold test
+        // to check for angle rather than distance.
+
+        // 1 Find the set of edges - put an arbitrary one of each pair of
+        // half-pairs into "edges"
+        Set<HalfEdge> seen = new HashSet<HalfEdge>();
+        List<HalfEdge> edges = new ArrayList<HalfEdge>();
+        for (Face face : faces) {
+            HalfEdge h = face.he0;
+            do {
+                if (!seen.contains(h)) {
+                    edges.add(h);
+                    seen.add(h);
+                    if (h.opposite != null) {
+                        seen.add(h.opposite);
+                    }
+                }
+                h = h.next;
+            } while (h != face.he0);
+        }
+
+        for (int i = 0; i < edges.size(); i++) {
+            final HalfEdge e = edges.get(i);
+            final Vertex v0 = e.head();
+            final Vertex v1 = e.tail();
+            // Find the closest point to each edge, provided it is not closer
+            // to an edge adjacent to this one.
+            Vertex closest = null;
+            double closestDistanceSq = Double.MAX_VALUE;
+            for (Vertex v : pointBuffer) {
+                if (v != v0 && v != v1) {
+                    Vector3d p = Vector3d.nearestPointOnSegment(v0.pnt, v1.pnt, v.pnt);
+                    if (p != null) {
+                        double d = p.distanceSquared(v.pnt);
+                        if (d < closestDistanceSq) {
+                            // Check v is not closer to any neighbouring
+                            // segments
+                            Vertex v2 = e.next.head();
+                            Vertex v3 = e.opposite.next.head();
+                            assert v2 != v0 && v2 != v1 && v3 != v0 && v3 != v1;
+                            p = Vector3d.nearestPointOnSegment(v0.pnt, v2.pnt, v.pnt);
+                            if (p != null && p.distanceSquared(v.pnt) < d) {
+                                continue;
+                            }
+                            p = Vector3d.nearestPointOnSegment(v1.pnt, v2.pnt, v.pnt);
+                            if (p != null && p.distanceSquared(v.pnt) < d) {
+                                continue;
+                            }
+                            p = Vector3d.nearestPointOnSegment(v0.pnt, v3.pnt, v.pnt);
+                            if (p != null && p.distanceSquared(v.pnt) < d) {
+                                continue;
+                            }
+                            p = Vector3d.nearestPointOnSegment(v1.pnt, v3.pnt, v.pnt);
+                            if (p != null && p.distanceSquared(v.pnt) < d) {
+                                continue;
+                            }
+                        }
+                        closestDistanceSq = d;
+                        closest = v;
+                    }
+                }
+            }
+            if (closest != null) {
+                Vertex v = closest;
+                // Here is the threshold test.
+                // The original paper would have us test for
+                // edge.length() / v.distance(Vector3d.nearestPointToSegment(v0,
+                // v1)) < threshold
+                // but the angle of deflection is more intuitive and seems more
+                // useful too
+                double a0 = Vector3d.angle(v.pnt, v0.pnt, v1.pnt);
+                double a1 = Vector3d.angle(v.pnt, v1.pnt, v0.pnt);
+                if (a1 < threshold && a0 < threshold) {
+                    // Split "e" into two. This means removing two faces and
+                    // adding four.
+                    // Hairy but tested. To understand, sketch it out on paper.
+                    // Terminology:
+                    // v = breakpoint on edge
+                    // v0 = tail of edge
+                    // v1 = head of edge
+                    // Assuming v0 to v1 is a line going up the page, then...
+                    // f0 = face to bottom-left of v0,v1
+                    // f1 = face to top-left of v0,v1
+                    // f2 = face to bottom-right of v0,v1
+                    // f3 = face to top-right of v0,v1
+                    // e0 = edge between f0,f1
+                    // e1 = edge between f2,f3
+                    // e2 = edge between f1,f2
+                    // e3 = edge between f2,f3
+                    // e4 = edge to top-left of f1
+                    // e5 = edge to bottom-left of f0
+                    // e6 = edge to bottom-right of f2
+                    // e7 = edge to top-right of f3
+                    //
+                    // Note. assuming normal cartesion with (0,0) and y growing
+                    // up, then
+                    // edges in faces go CLOCKWISE. Not anti-clockwise, as
+                    // stated in Face
+                    //
+                    Face f0 = Face.createTriangle(v, v0, e.next.vertex);
+                    Face f1 = Face.createTriangle(v1, v, e.next.vertex);
+                    Face f2 = Face.createTriangle(v0, v, e.opposite.next.vertex);
+                    Face f3 = Face.createTriangle(v, v1, e.opposite.next.vertex);
+                    // Eight edges to update
+                    f0.he0.setOpposite(f1.he0.prev); // e0
+                    f2.he0.prev.setOpposite(f3.he0); // e1
+                    f1.he0.next.setOpposite(f3.he0.next); // e2
+                    f0.he0.next.setOpposite(f2.he0.next); // e3
+                    f1.he0.setOpposite(e.prev.opposite); // e4
+                    f0.he0.prev.setOpposite(e.next.opposite); // e5
+                    f2.he0.setOpposite(e.opposite.prev.opposite); // e6
+                    f3.he0.prev.setOpposite(e.opposite.next.opposite); // e7
+                    faces.remove(e.face);
+                    faces.remove(e.opposite.face);
+                    faces.add(f0);
+                    faces.add(f1);
+                    faces.add(f2);
+                    faces.add(f3);
+                }
+            }
+        }
+        reindexFacesAndVertices();
+    }
+
     // --------------------------- LOGGING ----------------------
     // Insert your framework of choice logging code here
 
