@@ -38,9 +38,6 @@ import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.Vector;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * Computes the convex hull of a set of three dimensional points.
  * <p>
@@ -135,11 +132,6 @@ import org.slf4j.LoggerFactory;
 public class QuickHull3D {
 
     /**
-     * Logger to log to.
-     */
-    private static Logger LOG = LoggerFactory.getLogger(QuickHull3D.class);
-
-    /**
      * Specifies that (on output) vertex indices for a face should be listed in
      * clockwise order.
      */
@@ -184,9 +176,9 @@ public class QuickHull3D {
 
     private Vertex[] minVtxs = new Vertex[3];
 
-    protected Vector faces = new Vector(16);
+    protected Vector<Face> faces = new Vector<Face>(16);
 
-    protected Vector horizon = new Vector(16);
+    protected Vector<HalfEdge> horizon = new Vector<HalfEdge>(16);
 
     private FaceList newFaces = new FaceList();
 
@@ -322,8 +314,8 @@ public class QuickHull3D {
 
     private HalfEdge findHalfEdge(Vertex tail, Vertex head) {
         // brute force ... OK, since setHull is not used much
-        for (Iterator it = faces.iterator(); it.hasNext();) {
-            HalfEdge he = ((Face) it.next()).findEdge(tail, head);
+        for (Iterator<Face> it = faces.iterator(); it.hasNext();) {
+            HalfEdge he = it.next().findEdge(tail, head);
             if (he != null) {
                 return he;
             }
@@ -359,7 +351,7 @@ public class QuickHull3D {
         }
         if (wrote) {
             error.append(" ");
-            LOG.error(error.toString());
+            error(error.toString());
         }
     }
 
@@ -379,7 +371,7 @@ public class QuickHull3D {
             }
             ps.flush();
             ps.close();
-            Vector indexList = new Vector(3);
+            Vector<Integer> indexList = new Vector<Integer>(3);
             stok.eolIsSignificant(true);
             printQhullErrors(proc);
 
@@ -405,8 +397,8 @@ public class QuickHull3D {
                 }
                 faceIndices[i] = new int[indexList.size()];
                 int k = 0;
-                for (Iterator it = indexList.iterator(); it.hasNext();) {
-                    faceIndices[i][k++] = ((Integer) it.next()).intValue();
+                for (Iterator<Integer> it = indexList.iterator(); it.hasNext();) {
+                    faceIndices[i][k++] = it.next().intValue();
                 }
             }
             setHull(coords, nump, faceIndices, numf);
@@ -517,8 +509,8 @@ public class QuickHull3D {
     public void triangulate() {
         double minArea = 1000 * charLength * DOUBLE_PREC;
         newFaces.clear();
-        for (Iterator it = faces.iterator(); it.hasNext();) {
-            Face face = (Face) it.next();
+        for (Iterator<Face> it = faces.iterator(); it.hasNext();) {
+            Face face = it.next();
             if (face.mark == Face.VISIBLE) {
                 face.triangulate(newFaces, minArea);
                 // splitFace (face);
@@ -684,12 +676,12 @@ public class QuickHull3D {
             throw new IllegalArgumentException("Input points appear to be coplanar");
         }
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("initial vertices:");
-            LOG.debug(vtx[0].index + ": " + vtx[0].pnt);
-            LOG.debug(vtx[1].index + ": " + vtx[1].pnt);
-            LOG.debug(vtx[2].index + ": " + vtx[2].pnt);
-            LOG.debug(vtx[3].index + ": " + vtx[3].pnt);
+        if (isDebugEnabled()) {
+            debug("initial vertices:");
+            debug(vtx[0].index + ": " + vtx[0].pnt);
+            debug(vtx[1].index + ": " + vtx[1].pnt);
+            debug(vtx[2].index + ": " + vtx[2].pnt);
+            debug(vtx[3].index + ": " + vtx[3].pnt);
         }
 
         Face[] tris = new Face[4];
@@ -848,8 +840,8 @@ public class QuickHull3D {
     public int[][] getFaces(int indexFlags) {
         int[][] allFaces = new int[faces.size()][];
         int k = 0;
-        for (Iterator it = faces.iterator(); it.hasNext();) {
-            Face face = (Face) it.next();
+        for (Iterator<Face> it = faces.iterator(); it.hasNext();) {
+            Face face = it.next();
             allFaces[k] = new int[face.numVertices()];
             getFaceIndices(allFaces[k], face, indexFlags);
             k++;
@@ -910,8 +902,8 @@ public class QuickHull3D {
             Point3d pnt = pointBuffer[vertexPointIndices[i]].pnt;
             ps.println("v " + pnt.x + " " + pnt.y + " " + pnt.z);
         }
-        for (Iterator fi = faces.iterator(); fi.hasNext();) {
-            Face face = (Face) fi.next();
+        for (Iterator<Face> fi = faces.iterator(); fi.hasNext();) {
+            Face face = fi.next();
             int[] indices = new int[face.numVertices()];
             getFaceIndices(indices, face, indexFlags);
 
@@ -964,12 +956,12 @@ public class QuickHull3D {
             }
             if (maxFace != null) {
                 addPointToFace(vtx, maxFace);
-                if (LOG.isDebugEnabled() && vtx.index == findIndex) {
-                    LOG.debug(findIndex + " CLAIMED BY " + maxFace.getVertexString());
+                if (isDebugEnabled() && vtx.index == findIndex) {
+                    debug(findIndex + " CLAIMED BY " + maxFace.getVertexString());
                 }
             } else {
-                if (LOG.isDebugEnabled() && vtx.index == findIndex) {
-                    LOG.debug(findIndex + " DISCARDED");
+                if (isDebugEnabled() && vtx.index == findIndex) {
+                    debug(findIndex + " DISCARDED");
                 }
             }
         }
@@ -1037,16 +1029,16 @@ public class QuickHull3D {
             }
 
             if (merge) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("  merging " + face.getVertexString() + "  and  " + oppFace.getVertexString());
+                if (isDebugEnabled()) {
+                    debug("  merging " + face.getVertexString() + "  and  " + oppFace.getVertexString());
                 }
 
                 int numd = face.mergeAdjacentFace(hedge, discardedFaces);
                 for (int i = 0; i < numd; i++) {
                     deleteFacePoints(discardedFaces[i], face);
                 }
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("  result: " + face.getVertexString());
+                if (isDebugEnabled()) {
+                    debug("  result: " + face.getVertexString());
                 }
                 return true;
             }
@@ -1058,12 +1050,12 @@ public class QuickHull3D {
         return false;
     }
 
-    protected void calculateHorizon(Point3d eyePnt, HalfEdge edge0, Face face, Vector horizon) {
+    protected void calculateHorizon(Point3d eyePnt, HalfEdge edge0, Face face, Vector<HalfEdge> horizon) {
         // oldFaces.add (face);
         deleteFacePoints(face, null);
         face.mark = Face.DELETED;
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("  visiting face " + face.getVertexString());
+        if (isDebugEnabled()) {
+            debug("  visiting face " + face.getVertexString());
         }
         HalfEdge edge;
         if (edge0 == null) {
@@ -1079,8 +1071,8 @@ public class QuickHull3D {
                     calculateHorizon(eyePnt, edge.getOpposite(), oppFace, horizon);
                 } else {
                     horizon.add(edge);
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("  adding horizon edge " + edge.getVertexString());
+                    if (isDebugEnabled()) {
+                        debug("  adding horizon edge " + edge.getVertexString());
                     }
                 }
             }
@@ -1095,17 +1087,17 @@ public class QuickHull3D {
         return face.getEdge(0);
     }
 
-    protected void addNewFaces(FaceList newFaces, Vertex eyeVtx, Vector horizon) {
+    protected void addNewFaces(FaceList newFaces, Vertex eyeVtx, Vector<HalfEdge> horizon) {
         newFaces.clear();
 
         HalfEdge hedgeSidePrev = null;
         HalfEdge hedgeSideBegin = null;
 
-        for (Iterator it = horizon.iterator(); it.hasNext();) {
-            HalfEdge horizonHe = (HalfEdge) it.next();
+        for (Iterator<HalfEdge> it = horizon.iterator(); it.hasNext();) {
+            HalfEdge horizonHe = it.next();
             HalfEdge hedgeSide = addAdjoiningFace(eyeVtx, horizonHe);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("new face: " + hedgeSide.face.getVertexString());
+            if (isDebugEnabled()) {
+                debug("new face: " + hedgeSide.face.getVertexString());
             }
             if (hedgeSidePrev != null) {
                 hedgeSide.next.setOpposite(hedgeSidePrev);
@@ -1140,9 +1132,9 @@ public class QuickHull3D {
         horizon.clear();
         unclaimed.clear();
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Adding point: " + eyeVtx.index);
-            LOG.debug(" which is " + eyeVtx.face.distanceToPlane(eyeVtx.pnt) + " above face " + eyeVtx.face.getVertexString());
+        if (isDebugEnabled()) {
+            debug("Adding point: " + eyeVtx.index);
+            debug(" which is " + eyeVtx.face.distanceToPlane(eyeVtx.pnt) + " above face " + eyeVtx.face.getVertexString());
         }
         removePointFromFace(eyeVtx, eyeVtx.face);
         calculateHorizon(eyeVtx.pnt, null, eyeVtx.face, horizon);
@@ -1179,10 +1171,10 @@ public class QuickHull3D {
         while ((eyeVtx = nextPointToAdd()) != null) {
             addPointToHull(eyeVtx);
             cnt++;
-            LOG.debug("iteration " + cnt + " done");
+            debug("iteration " + cnt + " done");
         }
         reindexFacesAndVertices();
-        LOG.debug("hull done");
+        debug("hull done");
     }
 
     private void markFaceVertices(Face face, int mark) {
@@ -1200,8 +1192,8 @@ public class QuickHull3D {
         }
         // remove inactive faces and mark active vertices
         numFaces = 0;
-        for (Iterator it = faces.iterator(); it.hasNext();) {
-            Face face = (Face) it.next();
+        for (Iterator<Face> it = faces.iterator(); it.hasNext();) {
+            Face face = it.next();
             if (face.mark != Face.VISIBLE) {
                 it.remove();
             } else {
@@ -1254,8 +1246,8 @@ public class QuickHull3D {
     protected boolean checkFaces(double tol, PrintStream ps) {
         // check edge convexity
         boolean convex = true;
-        for (Iterator it = faces.iterator(); it.hasNext();) {
-            Face face = (Face) it.next();
+        for (Iterator<Face> it = faces.iterator(); it.hasNext();) {
+            Face face = it.next();
             if (face.mark == Face.VISIBLE && !checkFaceConvexity(face, tol, ps)) {
                 convex = false;
             }
@@ -1316,8 +1308,8 @@ public class QuickHull3D {
 
         for (int i = 0; i < numPoints; i++) {
             Point3d pnt = pointBuffer[i].pnt;
-            for (Iterator it = faces.iterator(); it.hasNext();) {
-                Face face = (Face) it.next();
+            for (Iterator<Face> it = faces.iterator(); it.hasNext();) {
+                Face face = it.next();
                 if (face.mark == Face.VISIBLE) {
                     dist = face.distanceToPlane(pnt);
                     if (dist > pointTol) {
@@ -1331,4 +1323,23 @@ public class QuickHull3D {
         }
         return true;
     }
+
+    // --------------------------- LOGGING ----------------------
+    // Insert your framework of choice logging code here
+
+    private boolean isDebugEnabled() {
+        return false;
+    }
+
+    private void debug(String s) {
+        if (isDebugEnabled()) {
+            System.err.println("# " + s);
+        }
+    }
+
+    private void error(String s) {
+        System.err.println("ERROR: " + s);
+    }
+
+    // --------------------------- LOGGING ----------------------
 }
