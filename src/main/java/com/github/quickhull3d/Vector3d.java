@@ -29,8 +29,6 @@ package com.github.quickhull3d;
  * #L%
  */
 
-import java.util.Random;
-
 /**
  * A three-element vector. This class is actually a reduced version of the
  * Vector3d class contained in the author's matlib package (which was partly
@@ -102,18 +100,14 @@ public class Vector3d {
      */
     public double get(int i) {
         switch (i) {
-            case 0: {
+            case 0:
                 return x;
-            }
-            case 1: {
+            case 1:
                 return y;
-            }
-            case 2: {
+            case 2:
                 return z;
-            }
-            default: {
+            default:
                 throw new ArrayIndexOutOfBoundsException(i);
-            }
         }
     }
 
@@ -130,21 +124,17 @@ public class Vector3d {
      */
     public void set(int i, double value) {
         switch (i) {
-            case 0: {
+            case 0:
                 x = value;
                 break;
-            }
-            case 1: {
+            case 1:
                 y = value;
                 break;
-            }
-            case 2: {
+            case 2:
                 z = value;
                 break;
-            }
-            default: {
+            default:
                 throw new ArrayIndexOutOfBoundsException(i);
-            }
         }
     }
 
@@ -154,24 +144,11 @@ public class Vector3d {
      * @param v1
      *            vector whose values are copied
      */
-    public void set(Vector3d v1) {
+    public Vector3d set(Vector3d v1) {
         x = v1.x;
         y = v1.y;
         z = v1.z;
-    }
-
-    /**
-     * Adds vector v1 to v2 and places the result in this vector.
-     * 
-     * @param v1
-     *            left-hand vector
-     * @param v2
-     *            right-hand vector
-     */
-    public void add(Vector3d v1, Vector3d v2) {
-        x = v1.x + v2.x;
-        y = v1.y + v2.y;
-        z = v1.z + v2.z;
+        return this;
     }
 
     /**
@@ -180,24 +157,11 @@ public class Vector3d {
      * @param v1
      *            right-hand vector
      */
-    public void add(Vector3d v1) {
+    public Vector3d add(Vector3d v1) {
         x += v1.x;
         y += v1.y;
         z += v1.z;
-    }
-
-    /**
-     * Subtracts vector v1 from v2 and places the result in this vector.
-     * 
-     * @param v1
-     *            left-hand vector
-     * @param v2
-     *            right-hand vector
-     */
-    public void sub(Vector3d v1, Vector3d v2) {
-        x = v1.x - v2.x;
-        y = v1.y - v2.y;
-        z = v1.z - v2.z;
+        return this;
     }
 
     /**
@@ -206,10 +170,11 @@ public class Vector3d {
      * @param v1
      *            right-hand vector
      */
-    public void sub(Vector3d v1) {
+    public Vector3d sub(Vector3d v1) {
         x -= v1.x;
         y -= v1.y;
         z -= v1.z;
+        return this;
     }
 
     /**
@@ -218,25 +183,11 @@ public class Vector3d {
      * @param s
      *            scaling factor
      */
-    public void scale(double s) {
+    public Vector3d scale(double s) {
         x = s * x;
         y = s * y;
         z = s * z;
-    }
-
-    /**
-     * Scales the elements of vector v1 by <code>s</code> and places the results
-     * in this vector.
-     * 
-     * @param s
-     *            scaling factor
-     * @param v1
-     *            vector to be scaled
-     */
-    public void scale(double s, Vector3d v1) {
-        x = s * v1.x;
-        y = s * v1.y;
-        z = s * v1.z;
+        return this;
     }
 
     /**
@@ -268,7 +219,6 @@ public class Vector3d {
         double dx = x - v.x;
         double dy = y - v.y;
         double dz = z - v.z;
-
         return Math.sqrt(dx * dx + dy * dy + dz * dz);
     }
 
@@ -300,7 +250,7 @@ public class Vector3d {
     /**
      * Normalizes this vector in place.
      */
-    public void normalize() {
+    public Vector3d normalize() {
         double lenSqr = x * x + y * y + z * z;
         double err = lenSqr - 1;
         if (err > (2 * DOUBLE_PREC) || err < -(2 * DOUBLE_PREC)) {
@@ -309,15 +259,15 @@ public class Vector3d {
             y /= len;
             z /= len;
         }
+        return this;
     }
 
     /**
      * Sets the elements of this vector to zero.
      */
-    public void setZero() {
-        x = 0;
-        y = 0;
-        z = 0;
+    public Vector3d setZero() {
+        x = y = z = 0;
+        return this;
     }
 
     /**
@@ -330,53 +280,32 @@ public class Vector3d {
      * @param z
      *            value for third element
      */
-    public void set(double x, double y, double z) {
+    public Vector3d set(double x, double y, double z) {
         this.x = x;
         this.y = y;
         this.z = z;
+        return this;
     }
 
     /**
-     * Computes the cross product of v1 and v2 and places the result in this
-     * vector.
+     * Computes the cross product of this vector and v2 and set this vector to
+     * the value
      * 
-     * @param v1
-     *            left-hand vector
      * @param v2
      *            right-hand vector
      */
-    public void cross(Vector3d v1, Vector3d v2) {
-        double tmpx = v1.y * v2.z - v1.z * v2.y;
-        double tmpy = v1.z * v2.x - v1.x * v2.z;
-        double tmpz = v1.x * v2.y - v1.y * v2.x;
-
+    public Vector3d cross(Vector3d v2) {
+        double tmpx = y * v2.z - z * v2.y;
+        double tmpy = z * v2.x - x * v2.z;
+        double tmpz = x * v2.y - y * v2.x;
         x = tmpx;
         y = tmpy;
         z = tmpz;
+        return this;
     }
 
     /**
-     * Sets the elements of this vector to uniformly distributed random values
-     * in a specified range, using a supplied random number generator.
-     * 
-     * @param lower
-     *            lower random value (inclusive)
-     * @param upper
-     *            upper random value (exclusive)
-     * @param generator
-     *            random number generator
-     */
-    protected void setRandom(double lower, double upper, Random generator) {
-        double range = upper - lower;
-
-        x = generator.nextDouble() * range + lower;
-        y = generator.nextDouble() * range + lower;
-        z = generator.nextDouble() * range + lower;
-    }
-
-    /**
-     * Returns a string representation of this vector, consisting of the x, y,
-     * and z coordinates.
+     * Returns a string representation of this vector
      * 
      * @return string representation
      */
@@ -385,11 +314,37 @@ public class Vector3d {
     }
 
     public boolean equals(Object o) {
-        return o instanceof Vector3d && ((Vector3d)o).x == x && ((Vector3d)o).y == y && ((Vector3d)o).z == z;
+        return o instanceof Vector3d && ((Vector3d) o).x == x && ((Vector3d) o).y == y && ((Vector3d) o).z == z;
     }
 
     public int hashCode() {
         long l = Double.doubleToLongBits(x) ^ Double.doubleToLongBits(y) ^ Double.doubleToLongBits(z);
-        return (int)((l>>32)|l);
+        return (int) ((l >> 32) | l);
     }
+
+    /**
+     * Return the nearest point to p on the line-segment [p0,p1], or null if the
+     * perpendicular line from p to the line does not intersect the segment
+     */
+    static Point3d nearestPointOnSegment(final Point3d v0, final Point3d v1, final Point3d p) {
+        double l = v1.distance(v0);
+        Vector3d d = new Vector3d(v1).sub(v0).scale(1 / l);
+        Vector3d v = new Vector3d(p).sub(v0);
+        double t = v.dot(d);
+        if (t >= 0 && t <= l) {
+            Point3d q = (Point3d) new Point3d(v0).add(d.scale(t));
+            return q;
+        }
+        return null;
+    }
+
+    /**
+     * Return the angle in degrees between [p0,p1] and [p1,p2]
+     */
+    static double angle(final Point3d p0, final Point3d p1, final Point3d p2) {
+        Vector3d a = new Vector3d(p1).sub(p0).normalize();
+        Vector3d b = new Vector3d(p2).sub(p1).normalize();
+        return Math.acos(-a.dot(b)) / Math.PI * 180;
+    }
+
 }

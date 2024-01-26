@@ -476,8 +476,10 @@ public class QuickHull3D {
     /**
      * Constructs the convex hull of a set of points.
      * 
-     * @param points input points
-     * @param nump number of input points
+     * @param points
+     *            input points
+     * @param nump
+     *            number of input points
      * @throws IllegalArgumentException
      *             the number of input points is less than four or greater then
      *             the length of <code>points</code>, or the points appear to be
@@ -496,7 +498,9 @@ public class QuickHull3D {
 
     /**
      * Constructs the convex hull of a set of points
-     * @param points input points
+     * 
+     * @param points
+     *            input points
      */
     public void build(List<Point3d> points) {
         if (points.size() < 4) {
@@ -539,7 +543,7 @@ public class QuickHull3D {
 
     private void setPoints(double[] coords, int len) {
         List<Point3d> points = new ArrayList<Point3d>(len);
-        for (int i=0;i<len*3;) {
+        for (int i = 0; i < len * 3;) {
             points.add(new Point3d(coords[i++], coords[i++], coords[i++]));
         }
         setPoints(points);
@@ -549,7 +553,7 @@ public class QuickHull3D {
         int nump = pnts.size();
         vertexPointIndices = new int[nump];
         pointBuffer = new Vertex[nump];
-        for (int i=0;i<pnts.size();i++) {
+        for (int i = 0; i < pnts.size(); i++) {
             pointBuffer[i] = new Vertex(pnts.get(i));
             pointBuffer[i].index = i;
         }
@@ -633,19 +637,16 @@ public class QuickHull3D {
 
         // set third vertex to be the vertex farthest from
         // the line between vtx0 and vtx1
-        Vector3d u01 = new Vector3d();
         Vector3d diff02 = new Vector3d();
         Vector3d nrml = new Vector3d();
         Vector3d xprod = new Vector3d();
         double maxSqr = 0;
-        u01.sub(vtx[1].pnt, vtx[0].pnt);
-        u01.normalize();
+        Vector3d u01 = new Vector3d(vtx[1].pnt).sub(vtx[0].pnt).normalize();
         for (int i = 0; i < numPoints; i++) {
-            diff02.sub(pointBuffer[i].pnt, vtx[0].pnt);
-            xprod.cross(u01, diff02);
+            diff02.set(pointBuffer[i].pnt).sub(vtx[0].pnt);
+            xprod.set(u01).cross(diff02);
             double lenSqr = xprod.normSquared();
-            if (lenSqr > maxSqr && pointBuffer[i] != vtx[0] && // paranoid
-                    pointBuffer[i] != vtx[1]) {
+            if (lenSqr > maxSqr && pointBuffer[i] != vtx[0] && pointBuffer[i] != vtx[1]) {
                 maxSqr = lenSqr;
                 vtx[2] = pointBuffer[i];
                 nrml.set(xprod);

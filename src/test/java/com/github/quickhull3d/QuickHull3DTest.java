@@ -167,7 +167,7 @@ public class QuickHull3DTest {
         Point3d pnt = new Point3d();
 
         Point3d base = new Point3d();
-        base.setRandom(-1, 1, rand);
+        base.set(rand.nextDouble() * 2 - 1, rand.nextDouble() * 2 - 1, rand.nextDouble() * 2 - 1);
 
         double tol = DOUBLE_PREC;
 
@@ -181,11 +181,11 @@ public class QuickHull3DTest {
             }
         } else if (dimen == 1) {
             Vector3d u = new Vector3d();
-            u.setRandom(-1, 1, rand);
+            u.set(rand.nextDouble() * 2 - 1, rand.nextDouble() * 2 - 1, rand.nextDouble() * 2 - 1);
             u.normalize();
             for (int i = 0; i < num; i++) {
                 double a = 2 * (rand.nextDouble() - 0.5);
-                pnt.scale(a, u);
+                pnt.set(u).scale(a);
                 pnt.add(base);
                 randomlyPerturb(pnt, tol);
                 coords[i * 3 + 0] = pnt.x;
@@ -195,13 +195,13 @@ public class QuickHull3DTest {
         } else // dimen == 2
         {
             Vector3d nrm = new Vector3d();
-            nrm.setRandom(-1, 1, rand);
+            nrm.set(rand.nextDouble() * 2 - 1, rand.nextDouble() * 2 - 1, rand.nextDouble() * 2 - 1);
             nrm.normalize();
             for (int i = 0; i < num; i++) { // compute a random point and
                                             // project it to the plane
                 Vector3d perp = new Vector3d();
-                pnt.setRandom(-1, 1, rand);
-                perp.scale(pnt.dot(nrm), nrm);
+                pnt.set(rand.nextDouble() * 2 - 1, rand.nextDouble() * 2 - 1, rand.nextDouble() * 2 - 1);
+                perp.set(nrm).scale(pnt.dot(nrm));
                 pnt.sub(perp);
                 pnt.add(base);
                 randomlyPerturb(pnt, tol);
@@ -228,7 +228,7 @@ public class QuickHull3DTest {
         Point3d pnt = new Point3d();
 
         for (int i = 0; i < num;) {
-            pnt.setRandom(-radius, radius, rand);
+            pnt.set(rand.nextDouble() * radius * 2 - radius, rand.nextDouble() * radius * 2 - radius, rand.nextDouble() * radius * 2 - radius);
             if (pnt.norm() <= radius) {
                 coords[i * 3 + 0] = pnt.x;
                 coords[i * 3 + 1] = pnt.y;
