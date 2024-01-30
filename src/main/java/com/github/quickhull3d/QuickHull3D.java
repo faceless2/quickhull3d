@@ -909,15 +909,18 @@ public class QuickHull3D {
     }
 
     /**
-     * Write the triangulated convex hull as an X3D file.
-     * Mostly intended for debugging, the X3D is not well constructed.
-     * Flags include:
+     * Write the triangulated convex hull as an X3D file. Mostly intended for
+     * debugging, the X3D is not well constructed. Flags include:
      * <ul>
      * <li>"html" - wrap the X3D output in HTML for viewing in the browser</li>
      * </ul>
-     * @param out the Appendable to write to
-     * @param flags optional flags to control the render
-     * @throws IOException from the Appendable
+     * 
+     * @param out
+     *            the Appendable to write to
+     * @param flags
+     *            optional flags to control the render
+     * @throws IOException
+     *             from the Appendable
      */
     public void writeX3D(Appendable out, String... flags) throws IOException {
         final List<String> flagset = Arrays.asList(flags);
@@ -952,8 +955,6 @@ public class QuickHull3D {
         StringBuilder coords = new StringBuilder();
         StringBuilder linecoords = new StringBuilder();
         df.setMaximumFractionDigits(25);
-        colors.setLength(0);
-        coords.setLength(0);
         out.append("<Transform translation=\"-" + df.format(midx) + " -" + df.format(midy) + " -" + df.format(midz) + "\">\n");
         out.append("<Shape>\n");
         out.append("<Appearance><Material diffuseColor=\"0.7 0.7 0.7\"></Material></Appearance>");
@@ -969,20 +970,26 @@ public class QuickHull3D {
                 double x = p.z;
                 double y = p.x;
                 double z = p.y;
-                // float[] comps = p.value;
                 String f = df.format(x) + " " + df.format(y) + " " + df.format(z) + " ";
                 coords.append(f);
+                linecoords.append(f);
                 if (fl == null) {
                     fl = f;
                 }
-                // colors.append(df.format(comps[0]) + " " + df.format(comps[1])
-                // + " " + df.format(comps[2]) + "  ");
-                linecoords.append(f);
+                java.awt.Color color = p.getColor();
+                if (color == null) {
+                    colors = null;
+                } else {
+                    float red = color.getRed() / 255f;
+                    float green = color.getGreen() / 255f;
+                    float blue = color.getBlue() / 255f;
+                    colors.append(df.format(red) + " " + df.format(green) + " " + df.format(blue) + " ");
+                }
             }
             linecoords.append(fl);
         }
         out.append("<Coordinate point=\"" + coords + "\"></Coordinate>\n");
-        if (colors.length() > 0) {
+        if (colors != null) {
             out.append("<Color color=\"" + colors + "      0 0 0 0 0 0 0 0 0\"/>\n");
         }
         out.append("</TriangleSet>\n");
@@ -1565,22 +1572,11 @@ public class QuickHull3D {
     // --------------------------- LOGGING ----------------------
 
     /*
-    public static void main(String[] args) throws IOException {
-        QuickHull3D qh = new QuickHull3D();
-        qh.build(new Point3d[]{
-            new Point3d(0, 0, 0),
-            new Point3d(10, 0, 0),
-            new Point3d(10, 10, 0),
-            new Point3d(0, 10, 0),
-            new Point3d(0, 0, 10),
-            new Point3d(10, 0, 10),
-            new Point3d(10, 10, 10),
-            new Point3d(0, 10, 10),
-            new Point3d(5, 5, 3),
-        });
-        qh.triangulate();
-        qh.concave(40);
-        qh.writeX3D(new FileWriter("index.html"));
-    }
-    */
+     * public static void main(String[] args) throws IOException { QuickHull3D
+     * qh = new QuickHull3D(); qh.build(new Point3d[]{ new Point3d(0, 0, 0), new
+     * Point3d(10, 0, 0), new Point3d(10, 10, 0), new Point3d(0, 10, 0), new
+     * Point3d(0, 0, 10), new Point3d(10, 0, 10), new Point3d(10, 10, 10), new
+     * Point3d(0, 10, 10), new Point3d(5, 5, 3), }); qh.triangulate();
+     * qh.concave(40); qh.writeX3D(new FileWriter("index.html"), "html"); }
+     */
 }

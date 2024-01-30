@@ -1,5 +1,7 @@
 package com.github.quickhull3d;
 
+import java.awt.Color;
+
 /*
  * #%L
  * A Robust 3D Convex Hull Algorithm in Java
@@ -67,5 +69,17 @@ public class Point3d extends Vector3d {
      */
     public Point3d(double x, double y, double z) {
         set(x, y, z);
+    }
+
+    /**
+     * Return the color associated with this point, or null. The default
+     * implementation returns null, but subclasses may override this method to
+     * return a Color suitable for X3D rendering
+     * 
+     * @return the Color of this point, or null for no color
+     * @see QuickHull3D#writeX3D
+     */
+    public Color getColor() {
+        return null;
     }
 }
