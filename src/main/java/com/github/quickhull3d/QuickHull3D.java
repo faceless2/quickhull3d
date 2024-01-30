@@ -29,13 +29,11 @@ package com.github.quickhull3d;
  * #L%
  */
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.StreamTokenizer;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 
 /**
  * Computes the convex hull of a set of three dimensional points.
@@ -910,6 +908,101 @@ public class QuickHull3D {
         }
     }
 
+    /**
+     * Write the triangulated convex hull as an X3D file.
+     * Mostly intended for debugging, the X3D is not well constructed.
+     * Flags include:
+     * <ul>
+     * <li>"html" - wrap the X3D output in HTML for viewing in the browser</li>
+     * </ul>
+     * @param out the Appendable to write to
+     * @param flags optional flags to control the render
+     * @throws IOException from the Appendable
+     */
+    public void writeX3D(Appendable out, String... flags) throws IOException {
+        final List<String> flagset = Arrays.asList(flags);
+        if (flagset.contains("html")) {
+            out.append("<!DOCTYPE html>\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head>\n<link rel=\"stylesheet\" type=\"text/css\" href=\"https://x3dom.org/download/dev/x3dom.css\"></link>\n<script type=\"text/javascript\" src=\"https://x3dom.org/download/dev/x3dom-full.js\"></script>\n</head><body>\n");
+        }
+        out.append("<X3D xmlns=\"http://www.web3d.org/specifications/x3d\">\n");
+        out.append("<Scene>\n");
+        final DecimalFormat df = new DecimalFormat("0", DecimalFormatSymbols.getInstance(Locale.ENGLISH));
+        double minx = Float.NaN, maxx = Float.NaN, miny = Float.NaN, maxy = Float.NaN, minz = Float.NaN, maxz = Float.NaN;
+        for (Vertex v : pointBuffer) {
+            Point3d p = v.pnt;
+            if (minx == minx) {
+                minx = Math.min(minx, p.x);
+                maxx = Math.max(maxx, p.x);
+                miny = Math.min(miny, p.y);
+                maxy = Math.max(maxy, p.y);
+                minz = Math.min(minz, p.z);
+                maxz = Math.max(maxz, p.z);
+            } else {
+                minx = maxx = p.x;
+                miny = maxy = p.y;
+                minz = maxz = p.z;
+            }
+        }
+        double midx = (minx + maxx) / 2;
+        double midy = (miny + maxy) / 2;
+        double midz = (minz + maxz) / 2;
+        double vpz = Math.max(maxz - minz, Math.max(maxx - minx, maxy - miny)) * 3;
+        out.append("<Viewpoint position=\"0 0 " + df.format(vpz) + "\"></Viewpoint>\n");
+        StringBuilder colors = new StringBuilder();
+        StringBuilder coords = new StringBuilder();
+        StringBuilder linecoords = new StringBuilder();
+        df.setMaximumFractionDigits(25);
+        colors.setLength(0);
+        coords.setLength(0);
+        out.append("<Transform translation=\"-" + df.format(midx) + " -" + df.format(midy) + " -" + df.format(midz) + "\">\n");
+        out.append("<Shape>\n");
+        out.append("<Appearance><Material diffuseColor=\"0.7 0.7 0.7\"></Material></Appearance>");
+        out.append("<TriangleSet>\n");
+        int[][] faces = getFaces(POINT_RELATIVE);
+        for (int i = 0; i < faces.length; i++) {
+            if (faces[i].length > 3) {
+                throw new IllegalStateException("Face must be triangulated before generating X3D");
+            }
+            String fl = null;
+            for (int j = 0; j < 3; j++) {
+                Point3d p = pointBuffer[faces[i][j]].pnt;
+                double x = p.z;
+                double y = p.x;
+                double z = p.y;
+                // float[] comps = p.value;
+                String f = df.format(x) + " " + df.format(y) + " " + df.format(z) + " ";
+                coords.append(f);
+                if (fl == null) {
+                    fl = f;
+                }
+                // colors.append(df.format(comps[0]) + " " + df.format(comps[1])
+                // + " " + df.format(comps[2]) + "  ");
+                linecoords.append(f);
+            }
+            linecoords.append(fl);
+        }
+        out.append("<Coordinate point=\"" + coords + "\"></Coordinate>\n");
+        if (colors.length() > 0) {
+            out.append("<Color color=\"" + colors + "      0 0 0 0 0 0 0 0 0\"/>\n");
+        }
+        out.append("</TriangleSet>\n");
+        out.append("</Shape>\n");
+        out.append("<Shape>\n");
+        out.append("<LineSet>\n");
+        out.append("<Coordinate point=\"" + linecoords + "\"></Coordinate>\n");
+        out.append("</LineSet>\n");
+        out.append("</Shape>\n");
+        out.append("</Transform>\n");
+        out.append("</Scene>\n");
+        out.append("</X3D>\n");
+        if (flagset.contains("html")) {
+            out.append("</body></html>\n");
+        }
+        if (out instanceof Flushable) {
+            ((Flushable) out).flush();
+        }
+    }
+
     private void getFaceIndices(int[] indices, Face face, int flags) {
         boolean ccw = (flags & CLOCKWISE) == 0;
         boolean indexedFromOne = (flags & INDEXED_FROM_ONE) != 0;
@@ -1470,4 +1563,24 @@ public class QuickHull3D {
     }
 
     // --------------------------- LOGGING ----------------------
+
+    /*
+    public static void main(String[] args) throws IOException {
+        QuickHull3D qh = new QuickHull3D();
+        qh.build(new Point3d[]{
+            new Point3d(0, 0, 0),
+            new Point3d(10, 0, 0),
+            new Point3d(10, 10, 0),
+            new Point3d(0, 10, 0),
+            new Point3d(0, 0, 10),
+            new Point3d(10, 0, 10),
+            new Point3d(10, 10, 10),
+            new Point3d(0, 10, 10),
+            new Point3d(5, 5, 3),
+        });
+        qh.triangulate();
+        qh.concave(40);
+        qh.writeX3D(new FileWriter("index.html"));
+    }
+    */
 }
